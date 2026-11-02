@@ -1,0 +1,164 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated cinematographer profile and account state.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "displayName": { "type": "string", "description": "User display name." },
+        "email": { "type": "string", "description": "User email address." },
+        "photoUrl": { "type": "string", "description": "User profile photo URL." },
+        "currency": { "type": "string", "enum": ["NPR"], "description": "Fixed NPR currency." },
+        "onboardingCompleted": { "type": "boolean", "description": "Whether onboarding is complete." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "displayName", "email", "photoUrl", "currency", "onboardingCompleted", "createdAt", "updatedAt"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User preferences for AI assistant, biometric lock, and reminders.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "currency": { "type": "string", "enum": ["NPR"], "description": "Fixed NPR currency." },
+        "aiEnabled": { "type": "boolean", "description": "Whether CineVault AI assistant is enabled." },
+        "appLockEnabled": { "type": "boolean", "description": "Whether device credential lock is enabled." },
+        "notificationsEnabled": { "type": "boolean", "description": "Whether payment and schedule alerts are enabled." },
+        "paymentReminderDays": { "type": "integer", "description": "Days before/after due date to trigger alert." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "currency", "aiEnabled", "appLockEnabled", "notificationsEnabled", "paymentReminderDays", "createdAt", "updatedAt"]
+    },
+    "Studio": {
+      "title": "Studio",
+      "description": "Production house or client studio entity.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "name": { "type": "string", "description": "Studio name." },
+        "contactPerson": { "type": "string", "description": "Primary contact person." },
+        "phone": { "type": "string", "description": "Contact phone number." },
+        "email": { "type": "string", "description": "Contact email address." },
+        "address": { "type": "string", "description": "Studio physical address." },
+        "notes": { "type": "string", "description": "Additional studio notes." },
+        "archived": { "type": "boolean", "description": "Whether studio is archived." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "name", "contactPerson", "phone", "email", "address", "notes", "archived", "createdAt", "updatedAt"]
+    },
+    "Shoot": {
+      "title": "Shoot",
+      "description": "Cinematography shoot project and earnings record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "eventTitle": { "type": "string", "description": "Title of the shoot or event." },
+        "studioId": { "type": "string", "description": "Associated studio ID." },
+        "studioName": { "type": "string", "description": "Associated studio name." },
+        "shootDateEpochMs": { "type": "integer", "description": "Shoot date in epoch milliseconds." },
+        "category": { "type": "string", "enum": ["Wedding", "Commercial", "Music Video", "Corporate", "Pre-Wedding", "Documentary", "Other"] },
+        "location": { "type": "string", "description": "Shoot location." },
+        "durationValue": { "type": "integer", "description": "Numeric duration." },
+        "durationUnit": { "type": "string", "enum": ["Hours", "Days"] },
+        "confirmedEarningsPaisa": { "type": "integer", "description": "Confirmed shoot earnings in NPR paisa (1 NPR = 100 paisa)." },
+        "expectedPaymentDateEpochMs": { "type": "integer", "description": "Expected payment collection date in epoch milliseconds." },
+        "paymentStatus": { "type": "string", "enum": ["Pending", "Collectible", "Overdue", "Settled"] },
+        "projectStatus": { "type": "string", "enum": ["Planned", "Completed"] },
+        "notes": { "type": "string", "description": "Project notes." },
+        "attachmentUri": { "type": "string", "description": "Optional local/cloud attachment reference." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "eventTitle", "studioId", "studioName", "shootDateEpochMs", "category", "location", "durationValue", "durationUnit", "confirmedEarningsPaisa", "expectedPaymentDateEpochMs", "paymentStatus", "projectStatus", "notes", "attachmentUri", "createdAt", "updatedAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "Payment collection / withdrawal record from a studio.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "studioId": { "type": "string", "description": "Studio ID from which payment was received." },
+        "studioName": { "type": "string", "description": "Studio name." },
+        "amountPaisa": { "type": "integer", "description": "Collected amount in NPR paisa." },
+        "dateEpochMs": { "type": "integer", "description": "Collection date in epoch milliseconds." },
+        "paymentMethod": { "type": "string", "enum": ["Bank Transfer", "eSewa", "Cash", "Khalti", "Other"] },
+        "referenceNumber": { "type": "string", "description": "Transaction reference number." },
+        "notes": { "type": "string", "description": "Withdrawal notes." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "studioId", "studioName", "amountPaisa", "dateEpochMs", "paymentMethod", "referenceNumber", "notes", "createdAt", "updatedAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Separate business expense ledger entry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "expenseName": { "type": "string", "description": "Name or description of expense." },
+        "category": { "type": "string", "enum": ["Camera Equipment", "Lens Rental", "Lighting", "Assistant Payments", "Travel", "Accommodation", "Food", "Editing", "Equipment Maintenance", "Software Subscriptions", "Other"] },
+        "amountPaisa": { "type": "integer", "description": "Expense amount in NPR paisa." },
+        "dateEpochMs": { "type": "integer", "description": "Expense date in epoch milliseconds." },
+        "associatedShootId": { "type": "string", "description": "Optional associated shoot ID." },
+        "associatedStudioId": { "type": "string", "description": "Optional associated studio ID." },
+        "paymentMethod": { "type": "string", "enum": ["Bank Transfer", "eSewa", "Cash", "Khalti", "Other"] },
+        "receiptUri": { "type": "string", "description": "Optional receipt attachment URI." },
+        "notes": { "type": "string", "description": "Expense notes." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "expenseName", "category", "amountPaisa", "dateEpochMs", "associatedShootId", "associatedStudioId", "paymentMethod", "receiptUri", "notes", "createdAt", "updatedAt"]
+    },
+    "VaultNotification": {
+      "title": "VaultNotification",
+      "description": "Payment reminder or schedule alert record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "title": { "type": "string", "description": "Notification title." },
+        "message": { "type": "string", "description": "Notification message body." },
+        "type": { "type": "string", "enum": ["PaymentReminder", "ScheduleConflict", "ShootUpcoming", "System"] },
+        "relatedEntityId": { "type": "string", "description": "Related shoot or studio ID." },
+        "dueDateEpochMs": { "type": "integer", "description": "Relevant timestamp in epoch milliseconds." },
+        "isRead": { "type": "boolean", "description": "Whether user has marked alert as read." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": ["userId", "title", "message", "type", "relatedEntityId", "dueDateEpochMs", "isRead", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Authenticated user profile document."
+    },
+    "/users/{userId}/settings/{settingsId}": {
+      "schema": { "$ref": "#/entities/UserSettings" },
+      "description": "User application settings."
+    },
+    "/users/{userId}/studios/{studioId}": {
+      "schema": { "$ref": "#/entities/Studio" },
+      "description": "User client studios."
+    },
+    "/users/{userId}/shoots/{shootId}": {
+      "schema": { "$ref": "#/entities/Shoot" },
+      "description": "User cinematography shoots."
+    },
+    "/users/{userId}/withdrawals/{withdrawalId}": {
+      "schema": { "$ref": "#/entities/Withdrawal" },
+      "description": "User payment withdrawals collected from studios."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "User business expenses."
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/VaultNotification" },
+      "description": "User payment reminders and schedule notifications."
+    }
+  }
+}

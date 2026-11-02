@@ -1,0 +1,279 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 0: Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTimestampsOnCreate(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTimestampsOnUpdate(data, oldData) {
+      return data.createdAt == oldData.createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPaymentMethod(method) {
+      return method is string && method in ['Bank Transfer', 'eSewa', 'Cash', 'Khalti', 'Other'];
+    }
+
+    // 1. UserProfile Validation
+    function isValidUserProfile(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.photoUrl is string && data.photoUrl.size() <= 500 &&
+             data.currency is string && data.currency == 'NPR' &&
+             data.onboardingCompleted is bool;
+    }
+
+    // 2. UserSettings Validation
+    function isValidUserSettings(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.currency is string && data.currency == 'NPR' &&
+             data.aiEnabled is bool &&
+             data.appLockEnabled is bool &&
+             data.notificationsEnabled is bool &&
+             data.paymentReminderDays is int && data.paymentReminderDays >= 1 && data.paymentReminderDays <= 90;
+    }
+
+    // 3. Studio Validation
+    function isValidStudio(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             data.contactPerson is string && data.contactPerson.size() <= 120 &&
+             data.phone is string && data.phone.size() <= 40 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.address is string && data.address.size() <= 250 &&
+             data.notes is string && data.notes.size() <= 1000 &&
+             data.archived is bool;
+    }
+
+    // 4. Shoot Validation
+    function isValidShoot(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.eventTitle is string && data.eventTitle.size() >= 1 && data.eventTitle.size() <= 150 &&
+             data.studioId is string && data.studioId.size() >= 1 && data.studioId.size() <= 128 &&
+             data.studioName is string && data.studioName.size() >= 1 && data.studioName.size() <= 120 &&
+             data.shootDateEpochMs is int && data.shootDateEpochMs > 0 &&
+             data.category is string && data.category in ['Wedding', 'Commercial', 'Music Video', 'Corporate', 'Pre-Wedding', 'Documentary', 'Other'] &&
+             data.location is string && data.location.size() <= 200 &&
+             data.durationValue is int && data.durationValue >= 1 && data.durationValue <= 365 &&
+             data.durationUnit is string && data.durationUnit in ['Hours', 'Days'] &&
+             data.confirmedEarningsPaisa is int && data.confirmedEarningsPaisa >= 0 &&
+             data.expectedPaymentDateEpochMs is int && data.expectedPaymentDateEpochMs >= 0 &&
+             data.paymentStatus is string && data.paymentStatus in ['Pending', 'Collectible', 'Overdue', 'Settled'] &&
+             data.projectStatus is string && data.projectStatus in ['Planned', 'Completed'] &&
+             data.notes is string && data.notes.size() <= 1000 &&
+             data.attachmentUri is string && data.attachmentUri.size() <= 500;
+    }
+
+    // 5. Withdrawal Validation
+    function isValidWithdrawal(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.studioId is string && data.studioId.size() >= 1 && data.studioId.size() <= 128 &&
+             data.studioName is string && data.studioName.size() >= 1 && data.studioName.size() <= 120 &&
+             data.amountPaisa is int && data.amountPaisa > 0 &&
+             data.dateEpochMs is int && data.dateEpochMs > 0 &&
+             isValidPaymentMethod(data.paymentMethod) &&
+             data.referenceNumber is string && data.referenceNumber.size() <= 100 &&
+             data.notes is string && data.notes.size() <= 1000;
+    }
+
+    // 6. Expense Validation
+    function isValidExpense(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.expenseName is string && data.expenseName.size() >= 1 && data.expenseName.size() <= 150 &&
+             data.category is string && data.category in ['Camera Equipment', 'Lens Rental', 'Lighting', 'Assistant Payments', 'Travel', 'Accommodation', 'Food', 'Editing', 'Equipment Maintenance', 'Software Subscriptions', 'Other'] &&
+             data.amountPaisa is int && data.amountPaisa > 0 &&
+             data.dateEpochMs is int && data.dateEpochMs > 0 &&
+             data.associatedShootId is string && data.associatedShootId.size() <= 128 &&
+             data.associatedStudioId is string && data.associatedStudioId.size() <= 128 &&
+             isValidPaymentMethod(data.paymentMethod) &&
+             data.receiptUri is string && data.receiptUri.size() <= 500 &&
+             data.notes is string && data.notes.size() <= 1000;
+    }
+
+    // 7. VaultNotification Validation
+    function isValidNotification(data, userId) {
+      return data.userId is string && data.userId == userId && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.message is string && data.message.size() >= 1 && data.message.size() <= 500 &&
+             data.type is string && data.type in ['PaymentReminder', 'ScheduleConflict', 'ShootUpcoming', 'System'] &&
+             data.relatedEntityId is string && data.relatedEntityId.size() <= 128 &&
+             data.dueDateEpochMs is int && data.dueDateEpochMs >= 0 &&
+             data.isRead is bool;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'photoUrl', 'currency', 'onboardingCompleted', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'photoUrl', 'currency', 'onboardingCompleted', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       isValidTimestampsOnCreate(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       isValidTimestampsOnUpdate(incoming(), existing()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoUrl', 'currency', 'onboardingCompleted', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /settings/{settingsId} {
+        allow get: if isOwner(userId) && isValidId(settingsId);
+        allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+
+        allow create: if isOwner(userId) &&
+                         isValidId(settingsId) &&
+                         incoming().keys().hasAll(['userId', 'currency', 'aiEnabled', 'appLockEnabled', 'notificationsEnabled', 'paymentReminderDays', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'currency', 'aiEnabled', 'appLockEnabled', 'notificationsEnabled', 'paymentReminderDays', 'createdAt', 'updatedAt']) &&
+                         isValidUserSettings(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(settingsId) &&
+                         isValidUserSettings(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['currency', 'aiEnabled', 'appLockEnabled', 'notificationsEnabled', 'paymentReminderDays', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(settingsId);
+      }
+
+      match /studios/{studioId} {
+        allow get: if isOwner(userId) && isValidId(studioId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(studioId) &&
+                         incoming().keys().hasAll(['userId', 'name', 'contactPerson', 'phone', 'email', 'address', 'notes', 'archived', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'name', 'contactPerson', 'phone', 'email', 'address', 'notes', 'archived', 'createdAt', 'updatedAt']) &&
+                         isValidStudio(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(studioId) &&
+                         isValidStudio(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'contactPerson', 'phone', 'email', 'address', 'notes', 'archived', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(studioId);
+      }
+
+      match /shoots/{shootId} {
+        allow get: if isOwner(userId) && isValidId(shootId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(shootId) &&
+                         incoming().keys().hasAll(['userId', 'eventTitle', 'studioId', 'studioName', 'shootDateEpochMs', 'category', 'location', 'durationValue', 'durationUnit', 'confirmedEarningsPaisa', 'expectedPaymentDateEpochMs', 'paymentStatus', 'projectStatus', 'notes', 'attachmentUri', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'eventTitle', 'studioId', 'studioName', 'shootDateEpochMs', 'category', 'location', 'durationValue', 'durationUnit', 'confirmedEarningsPaisa', 'expectedPaymentDateEpochMs', 'paymentStatus', 'projectStatus', 'notes', 'attachmentUri', 'createdAt', 'updatedAt']) &&
+                         isValidShoot(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(shootId) &&
+                         isValidShoot(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['eventTitle', 'studioId', 'studioName', 'shootDateEpochMs', 'category', 'location', 'durationValue', 'durationUnit', 'confirmedEarningsPaisa', 'expectedPaymentDateEpochMs', 'paymentStatus', 'projectStatus', 'notes', 'attachmentUri', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(shootId);
+      }
+
+      match /withdrawals/{withdrawalId} {
+        allow get: if isOwner(userId) && isValidId(withdrawalId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(withdrawalId) &&
+                         incoming().keys().hasAll(['userId', 'studioId', 'studioName', 'amountPaisa', 'dateEpochMs', 'paymentMethod', 'referenceNumber', 'notes', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'studioId', 'studioName', 'amountPaisa', 'dateEpochMs', 'paymentMethod', 'referenceNumber', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidWithdrawal(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(withdrawalId) &&
+                         isValidWithdrawal(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['studioId', 'studioName', 'amountPaisa', 'dateEpochMs', 'paymentMethod', 'referenceNumber', 'notes', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(withdrawalId);
+      }
+
+      match /expenses/{expenseId} {
+        allow get: if isOwner(userId) && isValidId(expenseId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(expenseId) &&
+                         incoming().keys().hasAll(['userId', 'expenseName', 'category', 'amountPaisa', 'dateEpochMs', 'associatedShootId', 'associatedStudioId', 'paymentMethod', 'receiptUri', 'notes', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'expenseName', 'category', 'amountPaisa', 'dateEpochMs', 'associatedShootId', 'associatedStudioId', 'paymentMethod', 'receiptUri', 'notes', 'createdAt', 'updatedAt']) &&
+                         isValidExpense(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(expenseId) &&
+                         isValidExpense(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['expenseName', 'category', 'amountPaisa', 'dateEpochMs', 'associatedShootId', 'associatedStudioId', 'paymentMethod', 'receiptUri', 'notes', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(expenseId);
+      }
+
+      match /notifications/{notificationId} {
+        allow get: if isOwner(userId) && isValidId(notificationId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(notificationId) &&
+                         incoming().keys().hasAll(['userId', 'title', 'message', 'type', 'relatedEntityId', 'dueDateEpochMs', 'isRead', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'title', 'message', 'type', 'relatedEntityId', 'dueDateEpochMs', 'isRead', 'createdAt', 'updatedAt']) &&
+                         isValidNotification(incoming(), userId) &&
+                         isValidTimestampsOnCreate(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(notificationId) &&
+                         isValidNotification(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         isValidTimestampsOnUpdate(incoming(), existing()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'message', 'type', 'relatedEntityId', 'dueDateEpochMs', 'isRead', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(notificationId);
+      }
+    }
+  }
+}

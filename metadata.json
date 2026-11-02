@@ -1,0 +1,6 @@
+{
+  "name": "CINEVAULT",
+  "description": "Cinematography business and financial management vault with Liquid Glass UI, studio ledgers, shoot tracking, PDF/CSV statements, and AI business intelligence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer geometric hexagonal vault ring -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M54,22 L81.7,38 L81.7,70 L54,86 L26.3,70 L26.3,38 Z" />
+    <path
+        android:fillColor="#08090D"
+        android:pathData="M54,27.5 L77,40.7 L77,67.3 L54,80.5 L31,67.3 L31,40.7 Z" />
+    <!-- 6 Geometric Camera Aperture Blades -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,31 L69,39.5 L57,46.5 L45,39.5 Z" />
+    <path
+        android:fillColor="#D4D4D8"
+        android:pathData="M73.5,42.5 L73.5,59.5 L61.5,52.5 L61.5,38.5 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M71,64.5 L56,73 L50,61.5 L62,54.5 Z" />
+    <path
+        android:fillColor="#D4D4D8"
+        android:pathData="M54,77 L39,68.5 L51,61.5 L63,68.5 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34.5,65.5 L34.5,48.5 L46.5,55.5 L46.5,69.5 Z" />
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M37,43.5 L52,35 L58,46.5 L46,53.5 Z" />
+    <!-- Center Precision Core -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M54,48.5 L58.8,51.2 L58.8,56.8 L54,59.5 L49.2,56.8 L49.2,51.2 Z" />
+</vector>
